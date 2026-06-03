@@ -12,6 +12,34 @@ This is an **independent implementation written from the published algorithm**
 (Dürmuth et al., *OMEN: Faster Password Guessing Using an Ordered Markov
 Enumerator*, ESSoS 2015). No code from the original RUB-SysSec OMEN is used.
 
+## Benchmark: OMEN vs. PRINCE
+
+Trained on 90% of `rockyou` and evaluated on the **disjoint** held-out 10%
+(split by `md5(password) % 10`, so no password is in both sets). The chart shows
+the cumulative share of the 1,456,297 held-out passwords cracked as a function
+of the number of guesses.
+
+![Crack rate vs. guesses](docs/img/crackrate_vs_guesses.png)
+
+| Method | Crack rate @ 20M guesses |
+|--------|-------------------------:|
+| **OMEN n=4** | **12.3%** |
+| OMEN n=3 | 9.3% |
+| PRINCE (train words) | 3.2% |
+| PRINCE (top-100k) | 1.7% |
+| rockyou wordlist (replay) | 0.0% |
+
+OMEN cracks **~4× more** than the best PRINCE configuration at the same guess
+budget, because it generates novel character sequences from a Markov model
+rather than recombining existing words. The wordlist baseline sits at exactly
+**0.0%** — replaying training words cracks nothing on a disjoint test set, which
+confirms there is no train/test leakage and that every OMEN crack is genuine
+generalisation. (PRINCE's real strengths — no training, direct hashcat
+pipelining, no alphabet/length limits — are operational, not ordering quality.)
+
+Full methodology and a one-command reproduction are in
+[`benchmarks/`](benchmarks/README.md).
+
 ## Why a rewrite
 
 The original C implementation is unmaintained and crashes on modern glibc, the
