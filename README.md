@@ -1,4 +1,4 @@
-# OMEN-fvsion
+# OMEN-reborn
 
 A clean-room **Ordered Markov ENumerator** for probability-ranked password
 candidate generation, written in modern, dependency-free Python.
