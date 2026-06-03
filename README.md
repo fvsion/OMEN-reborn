@@ -145,14 +145,6 @@ consume faster than that. The `Enumerator` Protocol plus the flat, `mmap`-able
 level tables are the deliberate seam for a future C/Cython `NativeEnumerator`
 that satisfies the same contract without changing anything upstream.
 
-## Integration (ashfall)
-
-`generate` is built to be driven as an external generator: it streams candidates
-to stdout and exits cleanly when the consumer closes the pipe (SIGPIPE). That
-matches ashfall's piped-phase contract (`generator_cmd` → hashcat stdin), the
-same way PRINCE is wired. Wiring an OMEN phase into ashfall is tracked
-separately.
-
 ## Development
 
 ```bash
