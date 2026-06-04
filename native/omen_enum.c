@@ -76,6 +76,10 @@ typedef struct {
     size_t out_len;
     u64 emitted, limit; /* limit == 0 means unlimited */
     int stop;
+
+    /* parallel partitioning: emit only contexts where ctx % partition_n == partition_k */
+    int partition_n; /* 1 = disabled (default) */
+    int partition_k; /* 0-indexed partition index */
 } Model;
 
 static void die(const char *msg) {
@@ -350,6 +354,9 @@ static void enumerate_length(Model *m, int length, int budget, u8 *codes) {
         u32 *ctxs = m->ip_bucket[a];
         int remaining = budget - a;
         for (u32 j = 0; j < cnt; j++) {
+            if (m->partition_n > 1 &&
+                    ctxs[j] % (u32)m->partition_n != (u32)m->partition_k)
+                continue;
             unpack_ctx(m, ctxs[j], codes);
             recurse(m, ctxs[j], codes, m->ctx_len, transitions, remaining);
             if (m->stop) return;
@@ -405,12 +412,14 @@ int main(int argc, char **argv) {
     if (argc < 2) {
         fprintf(stderr,
                 "usage: omen-enum <model_dir> [--max-guesses N] [--max-level L]\n"
-                "                             [--min-length L] [--max-length L]\n");
+                "                             [--min-length L] [--max-length L]\n"
+                "                             [--partition N K]\n");
         return 2;
     }
     const char *dir = argv[1];
     u64 max_guesses = 0; /* 0 = unlimited */
     int max_level = -1, min_len = 0, max_len = -1;
+    int partition_n = 1, partition_k = 0; /* 1 = disabled */
 
     int i = 2;
     while (i < argc) {
@@ -421,12 +430,22 @@ int main(int argc, char **argv) {
         else if (strcmp(opt, "--max-level") == 0) max_level = (int)parse_u64(v, "--max-level");
         else if (strcmp(opt, "--min-length") == 0) min_len = (int)parse_u64(v, "--min-length");
         else if (strcmp(opt, "--max-length") == 0) max_len = (int)parse_u64(v, "--max-length");
+        else if (strcmp(opt, "--partition") == 0) {
+            /* --partition N K: run only the Kth of N equal IP-context partitions. */
+            partition_n = (int)parse_u64(v, "--partition N");
+            if (i >= argc) die("--partition requires two arguments: N K");
+            partition_k = (int)parse_u64(argv[i++], "--partition K");
+            if (partition_n < 1 || partition_k < 0 || partition_k >= partition_n)
+                die("--partition: N must be >= 1 and 0 <= K < N");
+        }
         else die("unknown option");
     }
 
     Model m;
     memset(&m, 0, sizeof(m));
     m.limit = max_guesses;
+    m.partition_n = partition_n;
+    m.partition_k = partition_k;
     load_manifest(&m, dir);
     load_tables(&m, dir);
     compute_bounds(&m);
