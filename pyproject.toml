@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omen-reborn"
+version = "0.1.0"
+description = "Clean-room Ordered Markov ENumerator for probability-ranked password candidate generation."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "fvsion" }]
+keywords = ["password", "markov", "omen", "security", "wordlist", "hashcat"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+    "Intended Audience :: Information Technology",
+]
+# Runtime is stdlib-only by design — no dependencies here on purpose.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "mypy>=1.10", "ruff>=0.5"]
+# Benchmark tooling only (graphs); the omen runtime stays dependency-free.
+benchmark = ["matplotlib>=3.7"]
+
+[project.scripts]
+omen = "omen.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["omen*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+disallow_any_generics = true
+files = ["omen"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
