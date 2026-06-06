@@ -126,9 +126,17 @@ A model is a directory:
   alphabet, length levels) for the C enumerator, so it never parses JSON.
 
 Dense tables are `A^n` entries (`A` = alphabet size). Memory grows fast with
-`n`: at `A≈72`, `n=3` is ~370 KB and `n=4` is ~27 MB; `n=5` is rejected. Keep
-the alphabet reduced (the default auto-selects the 72 most frequent characters)
-and prefer `n=3` or `n=4`.
+`n`: at `A≈72`, `n=3` is ~370 KB and `n=4` is ~27 MB; `n=5` (~2 GiB) is
+**blocked by default**. To unlock it on a machine with sufficient RAM and a
+large corpus (250M+ passwords for good context coverage), raise one constant in
+`omen/model.py`:
+
+```python
+MAX_TABLE_ENTRIES = 1 << 31   # was 1 << 28 (256 MiB default)
+```
+
+Keep the alphabet reduced (the default auto-selects the 72 most frequent
+characters) and prefer `n=3` or `n=4` for most use cases.
 
 ## Architecture
 
